@@ -1,0 +1,250 @@
+http:
+  routers:
+    # --- DOMINIO: informes.idmji.org (Metabase) ---
+    informes:
+      rule: Host(`informes.idmji.org`)
+      entryPoints:
+        - https
+      service: informes-service
+      tls:
+        certResolver: le
+      middlewares:
+        # Applying custom Metabase headers to allow embedding and CORS
+        - metabase-headers
+        - limit-general
+
+    # --- DOMINIO: biblioteca.idmji.org (Wiki.js) ---
+    biblioteca:
+      rule: Host(`biblioteca.idmji.org`)
+      entryPoints:
+        - https
+      service: biblioteca-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: codex.idmji.org (Streamlit) ---
+    codex:
+      rule: Host(`codex.idmji.org`)
+      entryPoints:
+        - https
+      service: codex-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: workflow.cemp.app (n8n instance 1) ---
+    workflow-cemp:
+      rule: Host(`workflow.cemp.app`)
+      entryPoints:
+        - https
+      service: workflow-cemp-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: timeline.idmji.org (Next.js + FastAPI + Minio) ---
+    # 1. API, Docs y OpenAPI (Backend) - Puerto 8086
+    timeline-api:
+      rule: Host(`timeline.idmji.org`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))
+      entryPoints:
+        - https
+      service: timeline-api-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # 2. Minio Bucket (Images) - Puerto 9006
+    timeline-minio:
+      rule: Host(`timeline.idmji.org`) && PathPrefix(`/timeline`)
+      entryPoints:
+        - https
+      service: timeline-minio-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # 3. Frontend Next.js (Fallback) - Puerto 3036
+    timeline-frontend:
+      rule: Host(`timeline.idmji.org`)
+      entryPoints:
+        - https
+      service: timeline-frontend-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: workflow.idmji.org (n8n instance 2) ---
+    workflow-idmji:
+      rule: Host(`workflow.idmji.org`)
+      entryPoints:
+        - https
+      service: workflow-idmji-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: my.idmji.org (App Client) ---
+    my-idmji:
+      rule: Host(`my.idmji.org`)
+      entryPoints:
+        - https
+      service: my-idmji-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: tickets.cemp.app (Chatwoot Support) ---
+    tickets:
+      rule: Host(`tickets.cemp.app`)
+      entryPoints:
+        - https
+      service: tickets-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: docs.cemp.app (Chatwoot Docs Center) ---
+    docs-cemp:
+      rule: Host(`docs.cemp.app`)
+      entryPoints:
+        - https
+      service: tickets-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+    # --- DOMINIO: soporte.cemp.app (Landing de Soporte) ---
+    soporte-landing:
+      rule: Host(`soporte.cemp.app`)
+      entryPoints:
+        - https
+      service: soporte-landing-service
+      tls:
+        certResolver: le
+      middlewares:
+        - limit-general
+
+  middlewares:
+    # MIDDLEWARES: Security Headers (Nginx Hardening Equivalent)
+    security-headers:
+      headers:
+        customResponseHeaders:
+          X-Frame-Options: "SAMEORIGIN"
+          X-Content-Type-Options: "nosniff"
+          X-XSS-Protection: "1; mode=block"
+          Referrer-Policy: "no-referrer-when-downgrade"
+          Content-Security-Policy: "default-src 'self' http: https: data: blob: 'unsafe-inline'"
+
+    # MIDDLEWARES: Custom Metabase Headers (Allows iframe embedding in cemp.app and CORS)
+    metabase-headers:
+      headers:
+        customResponseHeaders:
+          X-Content-Type-Options: "nosniff"
+          X-XSS-Protection: "1; mode=block"
+          Referrer-Policy: "no-referrer-when-downgrade"
+          Content-Security-Policy: "default-src 'self' http: https: data: blob: 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://cemp.app https://*.cemp.app https://idmji.org https://*.idmji.org;"
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "https://cemp.app"
+          - "https://www.cemp.app"
+          - "https://idmji.org"
+          - "https://my.idmji.org"
+        accessControlMaxAge: 100
+        accessControlAllowCredentials: true
+        addVaryHeader: true
+
+    # MIDDLEWARES: Rate Limiting
+    limit-general:
+      rateLimit:
+        average: 100
+        burst: 20
+
+    limit-api:
+      rateLimit:
+        average: 10
+        burst: 10
+
+  services:
+    informes-service:
+      loadBalancer:
+        servers:
+          # Metabase runs on port 3000 on the host
+          - url: http://host.docker.internal:3000
+
+    biblioteca-service:
+      loadBalancer:
+        servers:
+          # Wiki.js runs on port 18234 on the host
+          - url: http://host.docker.internal:18234
+
+    codex-service:
+      loadBalancer:
+        servers:
+          # Streamlit runs on port 8501 on the host
+          - url: http://host.docker.internal:8501
+
+    workflow-cemp-service:
+      loadBalancer:
+        servers:
+          # n8n instance 1 runs on port 5678 on the host
+          - url: http://host.docker.internal:5678
+
+    timeline-frontend-service:
+      loadBalancer:
+        servers:
+          # Next.js Frontend runs on port 3036 on the host
+          - url: http://host.docker.internal:3036
+
+    timeline-api-service:
+      loadBalancer:
+        servers:
+          # FastAPI Backend runs on port 8086 on the host
+          - url: http://host.docker.internal:8086
+
+    timeline-minio-service:
+      loadBalancer:
+        servers:
+          # Minio runs on port 9006 on the host
+          - url: http://host.docker.internal:9006
+
+    workflow-idmji-service:
+      loadBalancer:
+        servers:
+          # n8n instance 2 runs on port 7856 on the host
+          - url: http://host.docker.internal:7856
+
+    my-idmji-service:
+      loadBalancer:
+        servers:
+          # App Client runs on port 8010 on the host
+          - url: http://host.docker.internal:8010
+
+    tickets-service:
+      loadBalancer:
+        servers:
+          # Chatwoot runs on port 3008 on the host
+          - url: http://host.docker.internal:3008
+
+    soporte-landing-service:
+      loadBalancer:
+        servers:
+          # Static landing page runs on port 3009 on the host
+          - url: http://host.docker.internal:3009
