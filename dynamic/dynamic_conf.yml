@@ -113,6 +113,18 @@ http:
       middlewares:
         - limit-general
 
+    # --- DOMINIO: tickets.cemp.app/storage (Chatwoot Local Storage con reescritura) ---
+    tickets-storage:
+      rule: Host(`tickets.cemp.app`) && PathPrefix(`/storage`)
+      entryPoints:
+        - https
+      service: tickets-minio-service
+      tls:
+        certResolver: le
+      middlewares:
+        - storage-strip
+        - limit-general
+
     # --- DOMINIO: docs.cemp.app (Chatwoot Docs Center) ---
     docs-cemp:
       rule: Host(`docs.cemp.app`)
@@ -145,6 +157,12 @@ http:
           X-XSS-Protection: "1; mode=block"
           Referrer-Policy: "no-referrer-when-downgrade"
           Content-Security-Policy: "default-src 'self' http: https: data: blob: 'unsafe-inline'"
+
+    # Middleware to strip /storage prefix for local MinIO routing
+    storage-strip:
+      stripPrefix:
+        prefixes:
+          - "/storage"
 
     # MIDDLEWARES: Custom Metabase Headers (Allows iframe embedding in cemp.app and CORS)
     metabase-headers:
@@ -242,6 +260,12 @@ http:
         servers:
           # Chatwoot runs on port 3008 on the host
           - url: http://host.docker.internal:3008
+
+    tickets-minio-service:
+      loadBalancer:
+        servers:
+          # Local Minio of Support runs on port 9050 on the host
+          - url: http://host.docker.internal:9050
 
     soporte-landing-service:
       loadBalancer:
