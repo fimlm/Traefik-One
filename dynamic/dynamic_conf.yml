@@ -122,7 +122,6 @@ http:
       tls:
         certResolver: le
       middlewares:
-        - storage-strip
         - limit-general
 
     # --- DOMINIO: docs.cemp.app (Chatwoot Docs Center) ---
