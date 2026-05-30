@@ -192,8 +192,8 @@ http:
     # MIDDLEWARES: Rate Limiting
     limit-general:
       rateLimit:
-        average: 100
-        burst: 20
+        average: 300
+        burst: 150
 
     limit-api:
       rateLimit:
