@@ -264,8 +264,8 @@ http:
     tickets-minio-service:
       loadBalancer:
         servers:
-          # Local Minio of Support runs on port 9050 on the host
-          - url: http://host.docker.internal:9050
+          # Local Minio is routed internally through the shared traefik-public network
+          - url: http://soporte-minio:9000
 
     soporte-landing-service:
       loadBalancer:
