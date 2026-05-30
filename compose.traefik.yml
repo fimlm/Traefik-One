@@ -79,7 +79,9 @@ services:
     networks:
       # Use the public network created to be shared between Traefik and
       # any other service that needs to be publicly available with HTTPS
-      - traefik-public
+      traefik-public:
+        aliases:
+          - tickets.cemp.app
 
 volumes:
   # Create a volume to store the certificates, even if the container is recreated
