@@ -60,7 +60,7 @@ http:
 
     # 2. Minio Bucket (Images) - Puerto 9006
     timeline-minio:
-      rule: Host(`timeline.idmji.org`) && PathPrefix(`/timeline`)
+      rule: Host(`timeline.idmji.org`) && PathPrefix(`/theark`)
       entryPoints:
         - https
       service: timeline-minio-service
