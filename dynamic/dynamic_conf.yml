@@ -46,10 +46,10 @@ http:
       middlewares:
         - limit-general
 
-    # --- DOMINIO: timeline.idmji.org (Next.js + FastAPI + Minio) ---
+    # --- DOMINIO: biblioteca.cemp.app (Next.js + FastAPI + Minio) ---
     # 1. API, Docs y OpenAPI (Backend) - Puerto 8086
-    timeline-api:
-      rule: Host(`timeline.idmji.org`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))
+    biblioteca-cemp-api:
+      rule: Host(`biblioteca.cemp.app`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/openapi.json`))
       entryPoints:
         - https
       service: timeline-api-service
@@ -58,9 +58,9 @@ http:
       middlewares:
         - limit-general
 
-    # 2. Minio Bucket (Images) - Puerto 9006
-    timeline-minio:
-      rule: Host(`timeline.idmji.org`) && PathPrefix(`/theark`)
+    # 2. Minio Bucket (Images) - Port 9006
+    biblioteca-cemp-minio:
+      rule: Host(`biblioteca.cemp.app`) && PathPrefix(`/theark`)
       entryPoints:
         - https
       service: timeline-minio-service
@@ -70,8 +70,8 @@ http:
         - limit-general
 
     # 3. Frontend Next.js (Fallback) - Puerto 3036
-    timeline-frontend:
-      rule: Host(`timeline.idmji.org`)
+    biblioteca-cemp-frontend:
+      rule: Host(`biblioteca.cemp.app`)
       entryPoints:
         - https
       service: timeline-frontend-service
