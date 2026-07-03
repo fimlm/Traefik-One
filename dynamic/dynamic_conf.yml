@@ -56,6 +56,7 @@ http:
       tls:
         certResolver: le
       middlewares:
+        - security-headers
         - limit-general
 
     # 2. Minio Bucket (Images) - Port 9006
@@ -78,6 +79,7 @@ http:
       tls:
         certResolver: le
       middlewares:
+        - security-headers
         - limit-general
 
     # --- DOMINIO: workflow.idmji.org (n8n instance 2) ---
@@ -147,15 +149,25 @@ http:
         - limit-general
 
   middlewares:
-    # MIDDLEWARES: Security Headers (Nginx Hardening Equivalent)
+    # MIDDLEWARES: Security Headers (cabeceras genéricas de transporte).
+    # NOTA: el Content-Security-Policy NO se define aquí — lo emite Next.js (next.config.js),
+    # porque es específico de la app y su versión fuerte usa nonces por petición.
+    # NOTA: se omite X-XSS-Protection (obsoleto; los navegadores modernos lo ignoran).
     security-headers:
       headers:
+        # HSTS: fuerza HTTPS (efectivo solo sobre HTTPS, que es el único entrypoint).
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        # Anti-MIME-sniffing.
+        contentTypeNosniff: true
+        # Anti-clickjacking: SAMEORIGIN (no DENY, para permitir iframes propios).
+        customFrameOptionsValue: "SAMEORIGIN"
+        # Referrer moderno (no filtra la URL completa cross-origin).
+        referrerPolicy: "strict-origin-when-cross-origin"
         customResponseHeaders:
-          X-Frame-Options: "SAMEORIGIN"
-          X-Content-Type-Options: "nosniff"
-          X-XSS-Protection: "1; mode=block"
-          Referrer-Policy: "no-referrer-when-downgrade"
-          Content-Security-Policy: "default-src 'self' http: https: data: blob: 'unsafe-inline'"
+          # Deshabilita APIs potentes que la app no usa.
+          Permissions-Policy: "camera=(), microphone=(), geolocation=(), browsing-topics=()"
 
     # Middleware to strip /storage prefix for local MinIO routing
     storage-strip:
