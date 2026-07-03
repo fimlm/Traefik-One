@@ -155,10 +155,6 @@ http:
     # NOTA: se omite X-XSS-Protection (obsoleto; los navegadores modernos lo ignoran).
     security-headers:
       headers:
-        # HSTS: fuerza HTTPS (efectivo solo sobre HTTPS, que es el único entrypoint).
-        stsSeconds: 63072000
-        stsIncludeSubdomains: true
-        stsPreload: true
         # Anti-MIME-sniffing.
         contentTypeNosniff: true
         # Anti-clickjacking: SAMEORIGIN (no DENY, para permitir iframes propios).
